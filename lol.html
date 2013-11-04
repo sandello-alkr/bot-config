@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="css/ui-lightness/jquery-ui-1.10.3.custom.min.css">
+	<script type="text/javascript" src="jquery-1.9.1.js"></script>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
+	<script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" src="Blob.js"></script>
+	<script type="text/javascript" src="FileSaver.js"></script>
+	<style type="text/css">
+	.table select { width: 78px;}
+	.table input[type="text"] {width: 50px;}
+	.table input[type="number"] {width: 35px;}
+	.box { float: left; width: 30px; height: 30px; background: #ccc; margin: 0 5px 10px;}
+	.text_rotate {
+		-webkit-transform: rotate(90deg);
+		-moz-transform: rotate(90deg);
+		-o-transform: rotate(90deg);
+		writing-mode: tb-rl;
+	}
+	.box.text_rotate {
+		/*height: auto;*/
+		text-align: right;
+	}
+	.row-fluid div{
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-khtml-user-select: none;
+		user-select: none; 
+	}
+	.fold {background: #f88;}
+	.check {background: #ff8;}
+	.raise.lvl20 {background: #8f8;}
+	.call {background: #88f;}
+	.raise.lvl100 {background: #070;}
+	.raise.lvl80 {background: #292;}
+	.raise.lvl60 {background: #4b4;}
+	.raise.lvl40 {background: #6d6;}
+	</style>
+	<script>
+	// var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
+	// saveAs(blob, "hello world.txt");
+	var row = "<tr class='new hand'><td><input type='text' class='name'/></td>"
+	var select = "<select class='select'><option></option><option>raise</option><option>call</option><option>check</option><option>fold</option></select><input type='number' class='bet'/>"
+	$(document).ready(function(){
+		$( "#slider" ).slider({
+			orientation: "vertical",
+			range: "min",
+			min: 0,
+			max: 70,
+			step: 10,
+			slide: function( event, ui ) {
+	        // $( "#amount" ).val( ui.value );
+	    }
+	});
+		$.each($('.card'),function(){
+			$(this).find('.box').eq(4).add($(this).find('.box').eq(8)).css('margin-left','15px')
+		})
+		$('.box').mousemove(function(e){
+			if(e.which == 1)
+			{
+				action = $('#action option:selected').val();
+				if(action == 'raise')
+					action += ' lvl'+$('#count option:selected').val()
+				$(this).attr('class','box '+action)
+			}
+		})
+		$('#action').change(function(){
+			if($(this).val() == 'raise')
+				$('#count').attr('disabled',false)
+			else
+				$('#count').attr('disabled',true)
+		})
+		$('.add_hand').click(function(){
+			var append = row
+			for (var i = 0; i < 6; i++) {
+				append += '<td>'+select+'</td>'
+			};
+			$('.table').append(append+'</tr>')
+			$('.table').find('.new').attr('id',$('.hand').length).removeClass('new')
+		})
+		$('form').submit(function(e){
+			e.preventDefault();
+			var boards = new Object();
+			$.each($('.accordion-group .accordion-toggle'),function(i){
+				var hands = new Object();
+				$.each($($(this).attr('href')).find('.card'),function(j){
+					var oesd = new Array($(this).find('.box').eq(0).attr('class').substring(4),$(this).find('.box').eq(4).attr('class').substring(4),$(this).find('.box').eq(8).attr('class').substring(4))
+					var gt = new Array($(this).find('.box').eq(1).attr('class').substring(4),$(this).find('.box').eq(5).attr('class').substring(4),$(this).find('.box').eq(9).attr('class').substring(4))
+					var hfd = new Array($(this).find('.box').eq(2).attr('class').substring(4),$(this).find('.box').eq(6).attr('class').substring(4),$(this).find('.box').eq(10).attr('class').substring(4))
+					var lfd = new Array($(this).find('.box').eq(3).attr('class').substring(4),$(this).find('.box').eq(7).attr('class').substring(4),$(this).find('.box').eq(11).attr('class').substring(4))
+					hands[$(this).find('.span4').text()] = {
+						'oesd': oesd,
+						'gt': gt,
+						'hfd': hfd,
+						'lfd': lfd
+					}
+				})
+				boards[$(this).text()] = hands
+			})
+			console.log(boards)
+			var blob = new Blob([JSON.stringify(boards)], {type: "text/plain;charset=utf-8"});
+			saveAs(blob, "hands.txt");
+		})
+})
+</script>
+</head>
+<body>
+	<div class="container">
+		<!-- <form>
+			<table class="table">
+				<tr><th rowspan="2">рука</th><th colspan="3">сухой борд</th><th colspan="3">влажный борд</th></tr>
+				<tr><th>1 круг</th><th>2 круг</th><th>3 круг</th><th>1 круг</th><th>2 круг</th><th>3 круг</th></tr>
+				<tr><td>дефолтная рука</td><td>3bet</td><td>raise</td><td>fold</td><td>raise</td><td>fold</td><td></td></tr>
+			</table>
+			<a class="btn btn-success add_hand"><i class="icon icon-white icon-plus"></i> Добавить руку</a>
+			<input type="submit"/>
+		</form> -->
+		<div class="row-fluid">
+			<div class="span">
+				<form>
+					<select id="action">
+						<option value="fold">fold</option>
+						<option value="raise">raise</option>
+						<option value="call">call</option>
+						<option value="check">check</option>
+					</select>
+					<select id="count" disabled>
+						<option value="20">20%</option>
+						<option value="40">40%</option>
+						<option value="60">60%</option>
+						<option value="80">80%</option>
+						<option value="100">100%</option>
+					</select>
+					<input type="submit"/>
+				</form>
+			</div>
+		</div>
+		<div class="accordion" id="accordion2">
+			<div class="accordion-group">
+				<div class="accordion-heading">
+					<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
+						борд сухой
+					</a>
+				</div>
+				<div id="collapseOne" class="accordion-body collapse in">
+					<div class="accordion-inner">
+						<div class="row-fluid">
+							<div class="span4"></div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Straight_Flush</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Four_of_a_kind</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Full_House</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Flush</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Straight</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">set</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">trips</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Top_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Middle_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Low_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Hight_OP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Hight_MP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">low_OP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Low_MP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPTK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPMK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPLK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">MPMK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">MPLK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">LP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">2_over_cards</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">trash</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+					</div>
+				</div>
+				<div class="accordion-heading">
+					<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+						борд полусухой
+					</a>
+				</div>
+				<div id="collapseTwo" class="accordion-body collapse in">
+					<div class="accordion-inner">
+						<div class="row-fluid">
+							<div class="span4"></div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Straight_Flush</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Four_of_a_kind</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Full_House</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Flush</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Straight</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">set</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">trips</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Top_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Middle_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Low_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Hight_OP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Hight_MP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">low_OP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Low_MP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPTK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPMK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPLK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">MPMK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">MPLK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">LP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">2_over_cards</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">trash</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+					</div>
+				</div>
+				<div class="accordion-heading">
+					<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
+						борд полу дро
+					</a>
+				</div>
+				<div id="collapseThree" class="accordion-body collapse in">
+					<div class="accordion-inner">
+						<div class="row-fluid">
+							<div class="span4"></div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Straight_Flush</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Four_of_a_kind</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Full_House</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Flush</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Straight</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">set</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">trips</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Top_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Middle_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Low_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Hight_OP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Hight_MP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">low_OP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Low_MP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPTK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPMK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPLK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">MPMK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">MPLK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">LP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">2_over_cards</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">trash</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+					</div>
+				</div>
+
+				<div class="accordion-heading">
+					<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseFour">
+						борд дро
+					</a>
+				</div>
+				<div id="collapseFour" class="accordion-body collapse in">
+					<div class="accordion-inner">
+						<div class="row-fluid">
+							<div class="span4"></div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div><div class="box">OESD</div><div class="box">GT</div><div class="box" title="Hight_flush_dro">HFD</div><div class="box" title="Low_flush_dro">LFD</div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Straight_Flush</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Four_of_a_kind</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Full_House</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Flush</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Straight</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">set</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">trips</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Top_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Middle_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Low_doper</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Hight_OP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Hight_MP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">low_OP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">Low_MP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPTK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPMK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">TPLK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">MPMK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">MPLK</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">LP</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">2_over_cards</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+						<div class="row-fluid card">
+							<div class="span4">trash</div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div><div class="box"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
